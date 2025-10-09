@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Domain\POP\Http\Controllers\POPController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,12 +17,19 @@ use Inertia\Inertia;
 */
 
 Route::get('/', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+    return Inertia::render('Front/Home');
+})->name('front.home');
+
+
+// Placeholder rute katalog (akan kita isi nanti)
+Route::prefix('catalog/print-on-paper')->name('pop.')->group(function(){
+    Route::get('/', [POPController::class, 'index'])->name('index');
+    Route::get('/{product:slug}', [POPController::class, 'show'])->name('show');
+    Route::post('/quote', [POPController::class, 'quote'])->name('quote');
+});
+
+Route::prefix('catalog/mmt')->name('mmt.')->group(function () {
+    Route::get('/', fn() => Inertia::render('Catalog/MMT/Index'))->name('index');
 });
 
 Route::middleware([

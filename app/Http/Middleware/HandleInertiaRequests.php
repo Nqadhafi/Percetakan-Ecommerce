@@ -37,7 +37,24 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
+
             //
+                        'auth' => [
+                'user' => fn () => $request->user()
+                    ? $request->user()->only('id','name','email')
+                    : null,
+            ],
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
+            ],
+            // Dummy dulu (nanti ambil dari cart table / service)
+            'cartCount' => fn () => 0,
+            'categories' => fn () => [
+                ['name' => 'Print On Paper', 'href' => route('pop.index')],
+                ['name' => 'MMT & Banner',   'href' => route('mmt.index')],
+            ],
+            'appName' => config('app.name'),
         ]);
     }
 }
