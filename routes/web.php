@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Domain\POP\Http\Controllers\POPController;
 use App\Commerce\Cart\Http\Controllers\CartController;
+use App\Http\Controllers\Profile\ProfileController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +22,11 @@ Route::get('/', function () {
     return Inertia::render('Front/Home');
 })->name('front.home');
 
+
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+});
 
 // Placeholder rute katalog (akan kita isi nanti)
 Route::prefix('catalog/print-on-paper')->name('pop.')->group(function(){
