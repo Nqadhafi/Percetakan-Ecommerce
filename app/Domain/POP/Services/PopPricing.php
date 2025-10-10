@@ -42,11 +42,11 @@ class PopPricing implements ProductPricingContract
 
         /** @var PopSpec|null $spec */
         $spec = $specs->first(function($s) use ($input) {
-            return $s->size      === $input['size']
-                && $s->material  === $input['material']
-                && $s->side      === $input['side']
-                && $s->lamination=== $input['lamination']
-                && $s->cutting   === $input['cutting'];
+            return
+            $s->material  === $input['material']
+            && $s->side      === $input['side']
+            && $s->lamination=== $input['lamination']
+            && $s->cutting   === $input['cutting'];
         });
 
         if (!$spec) {

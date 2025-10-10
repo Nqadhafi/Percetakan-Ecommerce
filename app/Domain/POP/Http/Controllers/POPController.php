@@ -35,15 +35,14 @@ public function show(PopProduct $product)
             ->get(['id','product_id','size','material','side','lamination','cutting','min_qty','step_qty']);
     });
 
-    $options = [
-        'sizes'       => $specs->pluck('size')->unique()->values(),
-        'materials'   => $specs->pluck('material')->unique()->values(),
-        'sides'       => $specs->pluck('side')->unique()->values(),
-        'laminations' => $specs->pluck('lamination')->unique()->values(),
-        'cuttings'    => $specs->pluck('cutting')->unique()->values(),
-        'min_qty'     => optional($specs->first())->min_qty ?? 50,
-        'step_qty'    => optional($specs->first())->step_qty ?? 50,
-    ];
+        $options = [
+        'materials'  => $specs->pluck('material')->unique()->values(),
+        'sides'      => $specs->pluck('side')->unique()->values(),
+        'laminations'=> $specs->pluck('lamination')->unique()->values(),
+        'cuttings'   => $specs->pluck('cutting')->unique()->values(),
+        'min_qty'    => optional($specs->first())->min_qty ?? 50,
+        'step_qty'   => optional($specs->first())->step_qty ?? 50,
+        ];
 
     // ⬇️ kirim daftar kombinasi valid (ringkas, tanpa relations)
     $specCombos = $specs->map(fn($s) => [

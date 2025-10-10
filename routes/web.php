@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Domain\POP\Http\Controllers\POPController;
+use App\Domain\MMT\Http\Controllers\MMTController;
 use App\Commerce\Cart\Http\Controllers\CartController;
 use App\Http\Controllers\Profile\ProfileController;
 
@@ -35,8 +36,10 @@ Route::prefix('catalog/print-on-paper')->name('pop.')->group(function(){
     Route::post('/quote', [POPController::class, 'quote'])->name('quote');
 });
 
-Route::prefix('catalog/mmt')->name('mmt.')->group(function () {
-    Route::get('/', fn() => Inertia::render('Catalog/MMT/Index'))->name('index');
+Route::prefix('catalog/mmt')->name('mmt.')->group(function(){
+    Route::get('/', [MMTController::class, 'index'])->name('index');
+    Route::get('/{product:slug}', [MMTController::class, 'show'])->name('show');
+    Route::post('/quote', [MMTController::class, 'quote'])->name('quote');
 });
 
 

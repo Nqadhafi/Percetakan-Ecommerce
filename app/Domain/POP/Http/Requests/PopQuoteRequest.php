@@ -13,7 +13,6 @@ class PopQuoteRequest extends FormRequest
     public function rules(): array {
         return [
             'product_slug' => ['required','string','max:100'],
-            'size'         => ['required','string','max:16'],
             'material'     => ['required','string','max:32'],
             'side'         => ['required','in:1s,2s'],
             'lamination'   => ['required','in:none,doff,glossy'],
