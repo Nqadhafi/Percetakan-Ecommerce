@@ -36,25 +36,33 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        return array_merge(parent::share($request), [
-
-            //
-                        'auth' => [
-                'user' => fn () => $request->user()
-                    ? $request->user()->only('id','name','email')
-                    : null,
-            ],
-            'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error'   => fn () => $request->session()->get('error'),
-            ],
-            // Dummy dulu (nanti ambil dari cart table / service)
-            'cartCount' => fn () => 0,
-            'categories' => fn () => [
-                ['name' => 'Print On Paper', 'href' => route('pop.index')],
-                ['name' => 'MMT & Banner',   'href' => route('mmt.index')],
-            ],
-            'appName' => config('app.name'),
-        ]);
+    return array_merge(parent::share($request), [
+        'auth' => [
+            'user' => fn () => $request->user()
+                ? $request->user()->only('id','name','email')
+                : null,
+        ],
+        'flash' => [
+            'success' => fn () => $request->session()->get('success'),
+            'error'   => fn () => $request->session()->get('error'),
+        ],
+        'cartCount' => function () use ($request) {
+            // Hitung item di cart draft untuk user / session saat ini
+            $query = \App\Models\Cart::query()->where('status','draft');
+            if ($u = $request->user()) {
+                $query->where('user_id', $u->id);
+            } else {
+                $query->where('session_id', $request->session()->getId());
+            }
+            $cartId = optional($query->select('id')->first())->id;
+            if (!$cartId) return 0;
+            return \App\Models\CartItem::where('cart_id',$cartId)->sum('qty');
+        },
+        'categories' => fn () => [
+            ['name' => 'Print On Paper', 'href' => route('pop.index')],
+            ['name' => 'MMT & Banner',   'href' => route('mmt.index')],
+        ],
+        'appName' => config('app.name'),
+    ]);
     }
 }
