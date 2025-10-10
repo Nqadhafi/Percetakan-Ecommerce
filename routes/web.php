@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Domain\POP\Http\Controllers\POPController;
+use App\Commerce\Cart\Http\Controllers\CartController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,14 @@ Route::prefix('catalog/print-on-paper')->name('pop.')->group(function(){
 
 Route::prefix('catalog/mmt')->name('mmt.')->group(function () {
     Route::get('/', fn() => Inertia::render('Catalog/MMT/Index'))->name('index');
+});
+
+
+Route::prefix('cart')->name('cart.')->group(function(){
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::post('/add', [CartController::class, 'add'])->name('add');
+    Route::post('/update/{item}', [CartController::class, 'update'])->name('update');
+    Route::post('/remove/{item}', [CartController::class, 'remove'])->name('remove');
 });
 
 Route::middleware([
