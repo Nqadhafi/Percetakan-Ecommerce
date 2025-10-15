@@ -42,6 +42,7 @@ class CartService
                 'total_price'  => $data['qty'] * $data['unit_price'],
                 'spec_snapshot'=> $data['spec_snapshot'],
                 'pricing_breakdown' => $data['pricing_breakdown'],
+                'note'         => $data['note'] ?? null,
             ]);
 
             $cart->recalcTotals();

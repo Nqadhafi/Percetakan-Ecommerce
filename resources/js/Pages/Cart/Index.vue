@@ -8,18 +8,81 @@ const cart = ref(page.props.cart) // { id, items:[], subtotal, grand_total, ... 
 const items = computed(() => cart.value?.items ?? [])
 
 const fmt = (n) => new Intl.NumberFormat('id-ID').format(n ?? 0)
+const itemNotes = ref({})
+const itemQtys = ref({})
+const showSuccess = ref(false)
+const successMessage = ref('')
+const isUpdating = ref(false)
 
-async function updateQty(item, newQty) {
-  if (newQty < 1) return
+// Initialize notes and quantities from cart items
+if (items.value) {
+  items.value.forEach(item => {
+    itemNotes.value[item.id] = item.note || ''
+    itemQtys.value[item.id] = item.qty
+  })
+}
+
+function showSuccessMessage(message) {
+  successMessage.value = message
+  showSuccess.value = true
+  isUpdating.value = true
+  
+  // Use a longer timeout and make sure we're not interrupted
+  setTimeout(() => {
+    if (isUpdating.value) {
+      showSuccess.value = false
+      isUpdating.value = false
+    }
+  }, 2000)
+}
+
+async function updateCartItem(item) {
+  const newQty = itemQtys.value[item.id]
+  const newNote = itemNotes.value[item.id]
+
+  if (newQty < 1) {
+    alert('Jumlah minimal 1')
+    itemQtys.value[item.id] = 1
+    return
+  }
+
   try {
-    await axios.post(route('cart.update', { item: item.id }), { qty: newQty })
-    // reload data cart supaya totals & badge ter-update
-    router.visit(route('cart.index'), { only: ['cart','cartCount'], preserveScroll: true })
+    const updates = {
+      qty: newQty,
+      note: String(newNote ?? '').slice(0, 500)
+    }
+    
+    // Show success message first
+    showSuccessMessage('Item berhasil diperbarui')
+    
+    // Then update the data
+    await axios.post(route('cart.update', { item: item.id }), updates)
+    
+    // Wait a bit before refreshing the page data
+    setTimeout(() => {
+      router.visit(route('cart.index'), { only: ['cart','cartCount'], preserveScroll: true })
+    }, 1000)
   } catch (e) {
-    alert('Gagal mengubah jumlah item.')
+    isUpdating.value = false
+    showSuccess.value = false
+    alert('Gagal mengubah item.')
   }
 }
 
+// Functions to update local qty without saving
+function incrementQty(item) {
+  itemQtys.value[item.id] = (itemQtys.value[item.id] || 1) + 1
+}
+
+function decrementQty(item) {
+  if (itemQtys.value[item.id] > 1) {
+    itemQtys.value[item.id]--
+  }
+}
+
+function updateLocalQty(item, newQty) {
+  itemQtys.value[item.id] = Math.max(1, parseInt(newQty) || 1)
+}
 async function removeItem(item) {
   if (!confirm('Hapus item dari keranjang?')) return
   try {
@@ -46,6 +109,28 @@ function specSummary(spec) {
 </script>
 
 <template>
+  <!-- Sweet Alert Style Success Modal -->
+  <div v-if="showSuccess" class="fixed inset-0 flex items-center justify-center z-50">
+    <!-- Overlay -->
+    <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+    
+    <!-- Modal -->
+    <div class="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full mx-4 relative z-10 transform scale-100 transition-transform">
+      <div class="text-center">
+        <!-- Success Icon -->
+        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+          <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+        </div>
+        
+        <!-- Message -->
+        <div class="text-lg font-medium text-gray-900 mb-2">Berhasil!</div>
+        <div class="text-sm text-gray-600">{{ successMessage }}</div>
+      </div>
+    </div>
+  </div>
+
   <div class="grid lg:grid-cols-3 gap-6">
     <!-- LIST ITEMS -->
     <div class="lg:col-span-2 space-y-4">
@@ -70,16 +155,35 @@ function specSummary(spec) {
          <template v-if="item.product_type !== 'mmt'">
            <!-- Qty stepper normal -->
            <div class="inline-flex border rounded-md overflow-hidden">
-             <button class="px-3 py-1" @click="updateQty(item, item.qty - 1)">−</button>
-             <input class="w-14 text-center border-l border-r" :value="item.qty"
-                    @change="e => updateQty(item, parseInt(e.target.value||item.qty))">
-             <button class="px-3 py-1" @click="updateQty(item, item.qty + 1)">+</button>
+             <button class="px-3 py-1" @click="decrementQty(item)">−</button>
+             <input class="w-14 text-center border-l border-r" 
+                    :value="itemQtys[item.id]"
+                    @change="e => updateLocalQty(item, e.target.value)">
+             <button class="px-3 py-1" @click="incrementQty(item)">+</button>
            </div>
          </template>
          <template v-else>
            <span class="text-sm text-gray-500">Qty: 1 (meteran)</span>
          </template>
-         <button class="text-red-600 text-sm hover:underline" @click="removeItem(item)">Hapus</button>
+         <div class="mt-2">
+  <label class="block text-xs text-gray-500 mb-1">Catatan</label>
+  <textarea
+    v-model="itemNotes[item.id]"
+    rows="2"
+    class="w-full border rounded-md px-2 py-1 text-sm"
+    placeholder="Tambahkan catatan untuk pekerjaan ini (opsional)"
+  ></textarea>
+</div>
+         <div class="flex items-center gap-3 mt-2">
+           <button 
+             class="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+             @click="updateCartItem(item)"
+           >
+             Update
+           </button>
+           <button class="text-red-600 text-sm hover:underline" @click="removeItem(item)">Hapus</button>
+         </div>
+         
        </div>
         </div>
 

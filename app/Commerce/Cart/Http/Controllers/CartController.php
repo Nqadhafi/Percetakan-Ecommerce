@@ -26,6 +26,7 @@ class CartController extends Controller
             'unit_price'   => ['required','numeric','min:0'],
             'spec_snapshot'=> ['required','array'],
             'pricing_breakdown' => ['required','array'],
+            'note'         => ['nullable','string','max:500'],
         ]);
 
         $cart = $service->getCurrentCart($r);
@@ -36,7 +37,14 @@ class CartController extends Controller
 
     public function update(Request $r, CartService $service, CartItem $item)
     {
-        $data = $r->validate(['qty'=>['required','integer','min:1']]);
+        $data = $r->validate([
+            'qty'=>['required','integer','min:1'],
+            'note' => ['nullable','string','max:500']
+        ]);
+        if (isset($data['note'])) {
+            $item->note = $data['note'];
+            $item->save();
+        }
         $service->updateQty($item, $data['qty']);
         return response()->json(['ok'=>true]);
     }

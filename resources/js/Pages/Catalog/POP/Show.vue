@@ -8,8 +8,9 @@ const props = defineProps({
   options: { type: Object, required: true },
   // specs sudah TANPA size: [{material, side, lamination, cutting}, ...]
   specs:   { type: Array,  required: true },
+  
 })
-
+const note = ref('')
 const fmt = (n) => new Intl.NumberFormat('id-ID').format(n ?? 0)
 
 const form = reactive({
@@ -97,6 +98,7 @@ async function addToCart() {
     unit_price: quote.value.unit_price,
     spec_snapshot: quote.value.spec_snapshot,
     pricing_breakdown: quote.value.breakdown,
+    note: note.value?.slice(0,500) || null,
   })
   router.visit(route('cart.index'))
 }
@@ -160,6 +162,12 @@ doQuote()
             <button class="px-3 py-2" @click="stepUp">+</button>
           </div>
           <div class="text-xs text-gray-500 mt-1">Minimal {{ minQty }}.</div>
+        </div>
+
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Catatan (opsional)</label>
+          <textarea v-model="note" rows="2" class="w-full border rounded-md px-3 py-2" placeholder="Contoh: potong jadi 2 bagian, kirim file via WA..."></textarea>
+          <div class="text-xs text-gray-400 mt-1">Maks 500 karakter.</div>
         </div>
       </div>
     </div>
