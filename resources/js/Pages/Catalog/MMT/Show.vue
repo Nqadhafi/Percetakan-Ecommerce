@@ -97,11 +97,11 @@ async function addToCart() {
   await axios.post(route('cart.add'), {
     product_type: 'mmt',
     product_id: quote.value.spec_snapshot.product_id,
-    name: quote.value.spec_snapshot.product_name,
-    qty: quote.value.qty,
-    unit_price: quote.value.unit_price,
-    spec_snapshot: quote.value.spec_snapshot,
-    pricing_breakdown: quote.value.breakdown,
+    name: quote.value.spec_snapshot.product_name,       // per m2 (SALAH untuk cart)
+    qty: 1,
+    unit_price: quote.value.total,               // TOTAL line (BENAR untuk cart)
+    spec_snapshot: quote.value.spec_snapshot,    // width_m, height_m, area_m2, material, finishing[]
+    pricing_breakdown: quote.value.breakdown,    // base, finishing_total, rincian
   })
   router.visit(route('cart.index'))
 }

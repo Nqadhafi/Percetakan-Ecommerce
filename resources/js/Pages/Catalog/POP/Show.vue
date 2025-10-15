@@ -6,136 +6,82 @@ import { router } from '@inertiajs/vue3'
 const props = defineProps({
   product: { type: Object, required: true },
   options: { type: Object, required: true },
-  // ⬇️ semua kombinasi valid dari backend
-  specs:   { type: Array,  required: true }, // [{size,material,side,lamination,cutting}, ...]
+  // specs sudah TANPA size: [{material, side, lamination, cutting}, ...]
+  specs:   { type: Array,  required: true },
 })
 
 const fmt = (n) => new Intl.NumberFormat('id-ID').format(n ?? 0)
 
 const form = reactive({
   product_slug: props.product.slug,
-  size: props.options.sizes?.[0] ?? '',
   material: props.options.materials?.[0] ?? '',
   side: props.options.sides?.[0] ?? '1s',
   lamination: props.options.laminations?.[0] ?? 'none',
   cutting: props.options.cuttings?.[0] ?? 'tanpa_potong',
-  qty: props.options.min_qty || 50,
+  qty: props.options.min_qty || 1,
 })
 
-const minQty = computed(() => props.options.min_qty || 50)
+const minQty  = computed(() => props.options.min_qty  || 1)
 const stepQty = computed(() => props.options.step_qty || 50)
 
-// ===== FILTER Opsi berdasarkan pilihan saat ini =====
+// ===== FILTER opsi (tanpa size) =====
 const all = props.specs
-
-// helper unik
 const uniq = (arr) => Array.from(new Set(arr))
 
-// material dipakai sebagai kunci utama
 const availableMaterials = computed(() => uniq(all.map(s => s.material)))
 
-// ukuran berdasarkan material
-const availableSizes = computed(() =>
-  uniq(all.filter(s => s.material === form.material).map(s => s.size))
-)
-
-// side berdasarkan material + size
 const availableSides = computed(() =>
-  uniq(all.filter(s => s.material === form.material && s.size === form.size).map(s => s.side))
+  uniq(all.filter(s => s.material === form.material).map(s => s.side))
 )
 
-// laminasi berdasarkan material + size + side
 const availableLaminations = computed(() =>
   uniq(all.filter(s =>
     s.material === form.material &&
-    s.size === form.size &&
     s.side === form.side
   ).map(s => s.lamination))
 )
 
-// cutting berdasarkan semua pilihan di atas
 const availableCuttings = computed(() =>
   uniq(all.filter(s =>
     s.material === form.material &&
-    s.size === form.size &&
     s.side === form.side &&
     s.lamination === form.lamination
   ).map(s => s.cutting))
 )
 
-// ===== Jaga konsistensi: auto-reset jika nilai tidak valid =====
+// ===== Konsistensi nilai terpilih =====
 watch(() => form.material, (val) => {
-  if (!availableMaterials.value.includes(val)) {
-    form.material = availableMaterials.value[0] ?? ''
-  }
-  if (!availableSizes.value.includes(form.size)) {
-    form.size = availableSizes.value[0] ?? ''
-  }
-  if (!availableSides.value.includes(form.side)) {
-    form.side = availableSides.value[0] ?? '1s'
-  }
-  if (!availableLaminations.value.includes(form.lamination)) {
-    form.lamination = availableLaminations.value[0] ?? 'none'
-  }
-  if (!availableCuttings.value.includes(form.cutting)) {
-    form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
-  }
-})
-
-watch(() => form.size, () => {
-  if (!availableSizes.value.includes(form.size)) {
-    form.size = availableSizes.value[0] ?? ''
-  }
-  if (!availableSides.value.includes(form.side)) {
-    form.side = availableSides.value[0] ?? '1s'
-  }
-  if (!availableLaminations.value.includes(form.lamination)) {
-    form.lamination = availableLaminations.value[0] ?? 'none'
-  }
-  if (!availableCuttings.value.includes(form.cutting)) {
-    form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
-  }
+  if (!availableMaterials.value.includes(val)) form.material = availableMaterials.value[0] ?? ''
+  if (!availableSides.value.includes(form.side)) form.side = availableSides.value[0] ?? '1s'
+  if (!availableLaminations.value.includes(form.lamination)) form.lamination = availableLaminations.value[0] ?? 'none'
+  if (!availableCuttings.value.includes(form.cutting)) form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
 })
 
 watch(() => form.side, () => {
-  if (!availableSides.value.includes(form.side)) {
-    form.side = availableSides.value[0] ?? '1s'
-  }
-  if (!availableLaminations.value.includes(form.lamination)) {
-    form.lamination = availableLaminations.value[0] ?? 'none'
-  }
-  if (!availableCuttings.value.includes(form.cutting)) {
-    form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
-  }
+  if (!availableSides.value.includes(form.side)) form.side = availableSides.value[0] ?? '1s'
+  if (!availableLaminations.value.includes(form.lamination)) form.lamination = availableLaminations.value[0] ?? 'none'
+  if (!availableCuttings.value.includes(form.cutting)) form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
 })
 
 watch(() => form.lamination, () => {
-  if (!availableLaminations.value.includes(form.lamination)) {
-    form.lamination = availableLaminations.value[0] ?? 'none'
-  }
-  if (!availableCuttings.value.includes(form.cutting)) {
-    form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
-  }
+  if (!availableLaminations.value.includes(form.lamination)) form.lamination = availableLaminations.value[0] ?? 'none'
+  if (!availableCuttings.value.includes(form.cutting)) form.cutting = availableCuttings.value[0] ?? 'tanpa_potong'
 })
 
-// ===== Quote & Add to cart (tetap sama) =====
+// ===== Quote & Add to cart =====
 const quoting = ref(false)
 const quote = ref(null)
 const errorMsg = ref('')
 
 async function doQuote() {
-  errorMsg.value = ''
-  quote.value = null
-  quoting.value = true
+  errorMsg.value = ''; quote.value = null; quoting.value = true
   try {
     const { data } = await axios.post(route('pop.quote'), form)
     quote.value = data
   } catch (e) {
     errorMsg.value = e?.response?.data?.message
       ?? (e?.response?.data?.errors ? Object.values(e.response.data.errors).flat().join(', ') : 'Gagal menghitung harga.')
-  } finally {
-    quoting.value = false
-  }
+  } finally { quoting.value = false }
 }
 
 function stepDown() { form.qty = Math.max(minQty.value, form.qty - stepQty.value) }
@@ -155,11 +101,12 @@ async function addToCart() {
   router.visit(route('cart.index'))
 }
 
-// auto-quote setiap ada perubahan (debounce ringan)
-let t = null
-watch(form, () => { clearTimeout(t); t = setTimeout(doQuote, 200) }, { deep: true })
+// auto-quote (debounce)
+let t=null
+watch(form, () => { clearTimeout(t); t=setTimeout(doQuote,200) }, { deep:true })
 doQuote()
 </script>
+
 
 <template>
   <div class="grid lg:grid-cols-3 gap-6">
@@ -172,7 +119,6 @@ doQuote()
     </div>
 
     <!-- MIDDLE: form spesifikasi -->
-    <!-- MIDDLE: form spesifikasi -->
     <div class="lg:col-span-1">
       <div class="border rounded-xl bg-white p-4 space-y-4">
         <h1 class="text-lg font-semibold">{{ product.name }}</h1>
@@ -183,14 +129,6 @@ doQuote()
             <option v-for="m in availableMaterials" :key="m" :value="m">{{ m }}</option>
           </select>
         </div>
-
-        <div>
-          <label class="block text-sm text-gray-600 mb-1">Ukuran</label>
-          <select v-model="form.size" class="w-full border rounded-md px-3 py-2">
-            <option v-for="s in availableSizes" :key="s" :value="s">{{ s }}</option>
-          </select>
-        </div>
-
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-sm text-gray-600 mb-1">Sisi Cetak</label>

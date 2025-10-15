@@ -35,8 +35,11 @@ function specSummary(spec) {
   const parts = []
   if (spec?.size) parts.push(spec.size)
   if (spec?.material) parts.push(spec.material)
+  if (spec?.width_m && spec?.height_m) parts.push(`${spec.width_m}×${spec.height_m} m`)
+  if (spec?.area_m2) parts.push(`${spec.area_m2} m²`)
   if (spec?.side) parts.push(spec.side)
   if (spec?.lamination && spec.lamination !== 'none') parts.push(`lam: ${spec.lamination}`)
+  if (spec?.finishing?.length) parts.push('finishing: ' + spec.finishing.map(f => f.name).join(', '))
   if (spec?.cutting) parts.push(`cut: ${spec.cutting.replaceAll('_',' ')}`)
   return parts.join(' • ')
 }
@@ -63,25 +66,33 @@ function specSummary(spec) {
             Tipe: {{ item.product_type.toUpperCase() }} • ID: #{{ item.product_id }}
           </div>
 
-          <div class="mt-3 flex items-center gap-3">
-            <!-- Qty stepper -->
-            <div class="inline-flex border rounded-md overflow-hidden">
-              <button class="px-3 py-1" @click="updateQty(item, item.qty - 1)">−</button>
-              <input class="w-14 text-center border-l border-r" :value="item.qty"
-                     @change="e => updateQty(item, parseInt(e.target.value||item.qty))">
-              <button class="px-3 py-1" @click="updateQty(item, item.qty + 1)">+</button>
-            </div>
-
-            <button class="text-red-600 text-sm hover:underline" @click="removeItem(item)">Hapus</button>
-          </div>
+       <div class="mt-3 flex items-center gap-3">
+         <template v-if="item.product_type !== 'mmt'">
+           <!-- Qty stepper normal -->
+           <div class="inline-flex border rounded-md overflow-hidden">
+             <button class="px-3 py-1" @click="updateQty(item, item.qty - 1)">−</button>
+             <input class="w-14 text-center border-l border-r" :value="item.qty"
+                    @change="e => updateQty(item, parseInt(e.target.value||item.qty))">
+             <button class="px-3 py-1" @click="updateQty(item, item.qty + 1)">+</button>
+           </div>
+         </template>
+         <template v-else>
+           <span class="text-sm text-gray-500">Qty: 1 (meteran)</span>
+         </template>
+         <button class="text-red-600 text-sm hover:underline" @click="removeItem(item)">Hapus</button>
+       </div>
         </div>
 
-        <div class="text-right shrink-0">
-          <div class="text-sm text-gray-500">Harga Satuan</div>
-          <div class="font-semibold">Rp {{ fmt(item.unit_price) }}</div>
-          <div class="text-sm text-gray-500 mt-2">Subtotal</div>
-          <div class="font-semibold">Rp {{ fmt(item.total_price) }}</div>
-        </div>
+       <div class="text-right shrink-0">
+         <div class="text-sm text-gray-500">
+           {{ item.product_type === 'mmt' ? 'Harga' : 'Harga Satuan' }}
+         </div>
+         <div class="font-semibold">Rp {{ fmt(item.unit_price) }}</div>
+         <div class="text-sm text-gray-500 mt-2">Subtotal</div>
+         <div class="font-semibold">
+           Rp {{ fmt(item.total_price ?? (item.unit_price * item.qty)) }}
+         </div>
+       </div>
       </div>
     </div>
 

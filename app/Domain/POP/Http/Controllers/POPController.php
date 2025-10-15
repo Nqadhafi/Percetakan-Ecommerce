@@ -32,7 +32,7 @@ public function show(PopProduct $product)
         return $product->specs()
             ->where('is_active', true)
             ->with(['priceTiers' => fn($q) => $q->orderBy('min_qty')])
-            ->get(['id','product_id','size','material','side','lamination','cutting','min_qty','step_qty']);
+            ->get(['id','product_id','material','side','lamination','cutting','min_qty','step_qty']);
     });
 
         $options = [
@@ -40,7 +40,7 @@ public function show(PopProduct $product)
         'sides'      => $specs->pluck('side')->unique()->values(),
         'laminations'=> $specs->pluck('lamination')->unique()->values(),
         'cuttings'   => $specs->pluck('cutting')->unique()->values(),
-        'min_qty'    => optional($specs->first())->min_qty ?? 50,
+        'min_qty'    => optional($specs->first())->min_qty ?? 1,
         'step_qty'   => optional($specs->first())->step_qty ?? 50,
         ];
 
