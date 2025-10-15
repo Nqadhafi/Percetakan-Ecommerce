@@ -15,7 +15,7 @@ class POPController extends Controller
     {
         $products = PopProduct::query()
             ->where('is_active', true)
-            ->select('id','name','slug')
+            ->select('id','name','slug','thumbnail_url','images_json')
             ->orderBy('name')
             ->get();
 
@@ -54,7 +54,7 @@ public function show(PopProduct $product)
     ])->values();
 
     return Inertia::render('Catalog/POP/Show', [
-        'product' => $product->only('id','name','slug'),
+        'product' => $product->only('id','name','slug','thumbnail_url','images_json'),
         'options' => $options,
         'specs'   => $specCombos, // ⬅️ penting untuk filter di FE
     ]);

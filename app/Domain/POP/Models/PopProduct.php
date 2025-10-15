@@ -9,6 +9,9 @@ class PopProduct extends Model
 {
     protected $table = 'pop_products';
     protected $fillable = ['name','slug','base_sku','is_active'];
+    protected $casts = [
+  'images_json' => 'array',
+];
 
     public function specs(): HasMany {
         return $this->hasMany(PopSpec::class, 'product_id');

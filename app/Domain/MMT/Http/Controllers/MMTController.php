@@ -17,7 +17,7 @@ class MMTController extends Controller
     public function index()
     {
         $products = MmtProduct::where('is_active', true)
-            ->select('id','name','slug','kind')->orderBy('name')->get();
+            ->select('id','name','slug','kind','thumbnail_url')->orderBy('name')->get();
 
         return Inertia::render('Catalog/MMT/Index', ['products' => $products]);
     }
@@ -31,13 +31,15 @@ class MMTController extends Controller
                 return [
                     'materials' => $product->materials()->where('is_active', true)->orderBy('material')->get(['material','base_price_per_m2']),
                     'finishings'=> $product->finishing()->where('is_active', true)->orderBy('finishing')->get(['finishing','price_type','price_value']),
+                    'thumbnail_url'=>$product->thumbnail_url,
+                    'gallery'=>$product->images_json ?? [],
                     'min_area'  => (float)$product->min_area,
                     'width_extra_m' => (float)$product->width_extra_m,
                 ];
             });
 
             return Inertia::render('Catalog/MMT/Show', [
-                'product'   => $product->only('id','name','slug','kind'),
+                'product'   => $product->only('id','name','slug','kind','thumbnail_url','has_pole','pole_price','pole_default_include','images_json'),
                 'materials' => $data['materials'],
                 'finishings'=> $data['finishings'],
                 'min_area'  => $data['min_area'],
@@ -53,7 +55,8 @@ class MMTController extends Controller
         }
 
         return Inertia::render('Catalog/MMT/Show', [
-            'product'   => $product->only('id','name','slug','kind','has_pole','pole_price','pole_default_include'),
+            'product'   => $product->only('id','name','slug','kind','has_pole','pole_price','pole_default_include','thumbnail_url','images_json'),
+
             'materials' => $materials,
             'sizesByMaterial' => $sizesByMat,
         ]);

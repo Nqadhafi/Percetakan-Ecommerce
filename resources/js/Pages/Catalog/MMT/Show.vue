@@ -1,10 +1,10 @@
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
 import { router } from '@inertiajs/vue3'
 
 const props = defineProps({
-  product: { type: Object, required: true },      // {id,name,slug,kind, ...}
+  product: { type: Object, required: true },      // {id,name,slug,kind, thumbnail_url, gallery:[] ...}
   // Meteran:
   materials: { type: [Array, null], default: null },     // [{material, base_price_per_m2}]
   finishings: { type: [Array, null], default: null },    // [{finishing, price_type, price_value}]
@@ -16,7 +16,48 @@ const props = defineProps({
 
 const fmt = (n) => new Intl.NumberFormat('id-ID').format(n ?? 0)
 
-// --------- Meteran state ----------
+/* =========================
+   Gambar: thumbnail → gallery
+   ========================= */
+const images = computed(() => {
+  const arr = []
+  if (props.product?.thumbnail_url) arr.push(props.product.thumbnail_url)
+  const gal = Array.isArray(props.product?.gallery) ? props.product.gallery : []
+  for (const g of gal) {
+    if (g && !arr.includes(g)) arr.push(g)
+  }
+  return arr
+})
+const mainImg = computed(() => images.value[0] || null) // UTAMA: thumbnail dulu; kalau tidak ada, ambil pertama dari galeri
+const lightboxOpen = ref(false)
+const lightboxIndex = ref(0)
+
+function openLightbox(idx = 0) {
+  if (!images.value.length) return
+  lightboxIndex.value = Math.min(Math.max(idx, 0), images.value.length - 1)
+  lightboxOpen.value = true
+}
+function closeLightbox() { lightboxOpen.value = false }
+function nextImg() {
+  if (!images.value.length) return
+  lightboxIndex.value = (lightboxIndex.value + 1) % images.value.length
+}
+function prevImg() {
+  if (!images.value.length) return
+  lightboxIndex.value = (lightboxIndex.value - 1 + images.value.length) % images.value.length
+}
+function onKey(e) {
+  if (!lightboxOpen.value) return
+  if (e.key === 'Escape') closeLightbox()
+  if (e.key === 'ArrowRight') nextImg()
+  if (e.key === 'ArrowLeft') prevImg()
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+
+/* =========================
+   Meteran state
+   ========================= */
 const formM = reactive({
   product_slug: props.product.slug,
   width: 200, height: 100, unit: 'cm',
@@ -33,8 +74,12 @@ const areaPreview = computed(() => {
   return { w, h, effW, area }
 })
 
-// --------- Paket state ----------
-const matList = computed(() => Array.isArray(props.materials) ? props.materials.map(m => m.material) : Object.keys(props.sizesByMaterial || {}))
+/* =========================
+   Paket state
+   ========================= */
+const matList = computed(() =>
+  Array.isArray(props.materials) ? props.materials.map(m => m.material) : Object.keys(props.sizesByMaterial || {})
+)
 const firstMat = matList.value?.[0] ?? ''
 const pack = reactive({
   product_slug: props.product.slug,
@@ -45,10 +90,13 @@ const pack = reactive({
 })
 watch(() => pack.material, (m) => { pack.size = props.sizesByMaterial?.[m]?.[0] ?? '' })
 
-// --------- Quote shared ----------
+/* =========================
+   Quote shared
+   ========================= */
 const quoting = ref(false)
 const quote = ref(null)
 const errorMsg = ref('')
+const note = ref('')
 
 function buildFinishingPayload() {
   if (!finDefs.value) return []
@@ -75,7 +123,7 @@ async function doQuote() {
         material: formM.material,
         finishing: buildFinishingPayload(),
       }
-    } else { // package
+    } else {
       payload = {
         product_slug: pack.product_slug,
         material: pack.material,
@@ -97,11 +145,12 @@ async function addToCart() {
   await axios.post(route('cart.add'), {
     product_type: 'mmt',
     product_id: quote.value.spec_snapshot.product_id,
-    name: quote.value.spec_snapshot.product_name,       // per m2 (SALAH untuk cart)
-    qty: 1,
-    unit_price: quote.value.total,               // TOTAL line (BENAR untuk cart)
-    spec_snapshot: quote.value.spec_snapshot,    // width_m, height_m, area_m2, material, finishing[]
-    pricing_breakdown: quote.value.breakdown,    // base, finishing_total, rincian
+    name: quote.value.spec_snapshot.product_name,
+    qty: quote.value.qty, // meteran=1, paket=qty user
+    unit_price: (props.product.kind === 'meteran' ? quote.value.total : quote.value.unit_price),
+    spec_snapshot: quote.value.spec_snapshot,
+    pricing_breakdown: quote.value.breakdown,
+    note: note.value?.slice(0,500) || null,
   })
   router.visit(route('cart.index'))
 }
@@ -116,11 +165,41 @@ doQuote()
 
 <template>
   <div class="grid lg:grid-cols-3 gap-6">
-    <!-- LEFT -->
+    <!-- LEFT: preview + thumbs -->
     <div class="lg:col-span-1">
       <div class="border rounded-xl bg-white p-4">
-        <div class="h-56 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500">
-          {{ product.kind === 'meteran' ? 'Preview Banner (Meteran)' : 'Preview Paket Banner' }}
+        <!-- Main preview (thumbnail prioritas) -->
+        <button
+          type="button"
+          class="h-56 w-full rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center group relative"
+          @click="openLightbox(0)"
+        >
+          <img
+            v-if="mainImg"
+            :src="mainImg"
+            alt="preview"
+            class="w-full h-full object-cover"
+          >
+          <div v-else class="text-gray-500">Preview</div>
+          <div
+            v-if="images.length"
+            class="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition"
+          >
+            Lihat gambar ({{ images.length }})
+          </div>
+        </button>
+
+        <!-- Thumbs (jika >1) -->
+        <div v-if="images.length > 1" class="flex gap-2 mt-3">
+          <button
+            v-for="(src,i) in images"
+            :key="i"
+            type="button"
+            class="w-14 h-14 rounded-md overflow-hidden border focus:ring-2 ring-blue-500"
+            @click="openLightbox(i)"
+          >
+            <img :src="src" class="w-full h-full object-cover" alt="">
+          </button>
         </div>
 
         <div v-if="product.kind==='meteran'" class="mt-3 text-sm text-gray-600">
@@ -133,7 +212,7 @@ doQuote()
       </div>
     </div>
 
-    <!-- MIDDLE -->
+    <!-- MIDDLE: form -->
     <div class="lg:col-span-1">
       <div class="border rounded-xl bg-white p-4 space-y-4">
         <h1 class="text-lg font-semibold">{{ product.name }}</h1>
@@ -214,10 +293,17 @@ doQuote()
             <input v-model.number="pack.qty" type="number" min="1" class="w-24 border rounded-md px-3 py-2" />
           </div>
         </template>
+
+        <!-- Catatan -->
+        <div>
+          <label class="block text-sm text-gray-600 mb-1">Catatan (opsional)</label>
+          <textarea v-model="note" rows="2" class="w-full border rounded-md px-3 py-2" placeholder="Contoh: 4 mata ayam di tiap pojok / kirim file via WA..."></textarea>
+          <div class="text-xs text-gray-400 mt-1">Maks 500 karakter.</div>
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT: harga & add to cart -->
     <div class="lg:col-span-1">
       <div class="border rounded-xl bg-white p-4 sticky top-24">
         <div class="text-sm text-gray-500">Harga</div>
@@ -268,5 +354,42 @@ doQuote()
         </div>
       </div>
     </div>
+
+    <!-- LIGHTBOX / MODAL GALLERY -->
+    <teleport to="body">
+      <div
+        v-if="lightboxOpen"
+        class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+        @click.self="closeLightbox"
+      >
+        <button
+          class="absolute top-4 right-4 text-white/80 hover:text-white text-2xl"
+          @click="closeLightbox"
+          aria-label="Tutup"
+        >✕</button>
+
+        <button
+          class="absolute left-2 md:left-4 text-white/80 hover:text-white text-3xl px-3 py-2"
+          @click.stop="prevImg"
+          aria-label="Sebelumnya"
+        >‹</button>
+
+        <img
+          :src="images[lightboxIndex]"
+          class="max-h-[88vh] max-w-[92vw] object-contain rounded-lg shadow-lg"
+          alt="gallery"
+        />
+
+        <button
+          class="absolute right-2 md:right-4 text-white/80 hover:text-white text-3xl px-3 py-2"
+          @click.stop="nextImg"
+          aria-label="Berikutnya"
+        >›</button>
+
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/80 text-sm">
+          {{ lightboxIndex + 1 }} / {{ images.length }}
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>

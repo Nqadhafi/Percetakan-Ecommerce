@@ -9,6 +9,9 @@ class MmtProduct extends Model
 {
     protected $table = 'mmt_products';
     protected $fillable = ['name','slug','base_sku','is_active','area_unit','min_area'];
+    protected $casts = [
+  'images_json' => 'array',
+];
 
     public function materials(): HasMany { return $this->hasMany(MmtMaterialPrice::class, 'product_id'); }
     public function finishing(): HasMany { return $this->hasMany(MmtFinishing::class, 'product_id'); }

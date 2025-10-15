@@ -21,7 +21,11 @@ defineProps({
         :href="route('mmt.show', p.slug)"
         class="border rounded-xl bg-white p-4 hover:shadow-sm transition"
       >
-        <div class="h-28 bg-gray-100 rounded-md mb-3"></div>
+        <div class="h-28 bg-gray-100 rounded-md mb-3 overflow-hidden">
+  <img v-if="p.thumbnail_url" :src="p.thumbnail_url" alt="" class="w-full h-full object-cover">
+  <div v-else class="w-full h-full bg-gray-100"></div>
+</div>
+
         <div class="font-medium truncate">{{ p.name }}</div>
         <div class="text-xs text-gray-500 mt-1">Klik untuk pilih dimensi & finishing</div>
       </Link>
