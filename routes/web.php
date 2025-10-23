@@ -9,6 +9,7 @@ use App\Commerce\Cart\Http\Controllers\CartController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Customer\CustomerOrderController;
+use App\Http\Controllers\Customer\DashboardController as CustomerDashboard;
 
 
 /*
@@ -70,7 +71,6 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
+ Route::get('/dashboard', [CustomerDashboard::class, 'index'])
+        ->name('customer.dashboard');
 });

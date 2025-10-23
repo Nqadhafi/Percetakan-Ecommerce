@@ -9,6 +9,12 @@ const categories = computed(() => page.props.categories ?? [])
 const appName = computed(() => page.props.appName ?? 'Shabat Printing')
 
 const q = ref('')
+const showMenu = ref(false)
+function toggleMenu(){ showMenu.value = !showMenu.value }
+function closeMenu(){ showMenu.value = false }
+const props = defineProps({
+  user: { type: Object, required: false },
+})
 
 function onSearch() {
   if (!q.value.trim()) return
@@ -28,11 +34,44 @@ function onSearch() {
           <Link :href="route('mmt.index')" class="hover:underline">MMT & Banner</Link>
         </div>
         <div class="flex items-center gap-4">
-          <template v-if="user">
-            <span class="hidden sm:inline">Hi, {{ user.name }}</span>
-            <Link href="/profile" class="hover:underline">Profil</Link>
-            <Link href="/logout" method="post" as="button" class="hover:underline">Keluar</Link>
-          </template>
+  <template v-if="user">
+    <!-- Wrapper -->
+    <div class="relative">
+      <!-- Trigger -->
+      <button
+        type="button"
+        @click="toggleMenu"
+        class="flex items-center gap-2 rounded-md px-3 py-1 hover:bg-gray-100 focus:outline-none"
+      >
+        <div class="w-8 h-8 rounded-full bg-gray-200 grid place-content-center text-gray-700">
+          <i class="bi bi-person"></i>
+        </div>
+        <span class="hidden sm:inline text-sm font-medium">Hi, {{ user.name }}</span>
+        <i class="bi bi-caret-down-fill text-xs"></i>
+      </button>
+
+      <!-- Dropdown -->
+      <transition name="fade">
+        <div
+          v-if="showMenu"
+          @click.outside="closeMenu"
+          class="absolute right-0 mt-2 w-44 bg-white border rounded-xl shadow-lg py-2 z-50"
+        >
+          <Link href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            <i class="bi bi-person me-2"></i> Profil
+          </Link>
+          <Link href="/orders" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            <i class="bi bi-receipt me-2"></i> Pesanan Saya
+          </Link>
+          <hr class="my-1 border-gray-100" />
+          <Link href="/logout" method="post" as="button"
+                class="block w-full text-left px-4 py-2 text-sm text-rose-600 hover:bg-rose-50">
+            <i class="bi bi-box-arrow-right me-2"></i> Keluar
+          </Link>
+        </div>
+      </transition>
+    </div>
+  </template>
           <template v-else>
             <Link href="/login" class="hover:underline">Masuk</Link>
             <Link href="/register" class="hover:underline">Daftar</Link>
@@ -139,3 +178,6 @@ function onSearch() {
     </footer>
   </div>
 </template>
+<style scoped>
+.fade-enter-active, .fade-leave-active { transition: opacity 0.15s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }</style>

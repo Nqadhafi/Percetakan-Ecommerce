@@ -58,21 +58,74 @@ function submit() {
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <div class="md:col-span-2">
-          <label class="block text-sm text-gray-600 mb-1">Alamat</label>
-          <input v-model="form.address.street" placeholder="Jalan / Gang / No." class="w-full border rounded-md px-3 py-2 mb-2" />
-          <div class="grid grid-cols-2 gap-3 mb-2">
-            <input v-model="form.address.district" placeholder="Kecamatan" class="border rounded-md px-3 py-2" />
-            <input v-model="form.address.city" placeholder="Kota/Kabupaten" class="border rounded-md px-3 py-2" />
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <input v-model="form.address.province" placeholder="Provinsi" class="border rounded-md px-3 py-2" />
-            <input v-model="form.address.postal_code" placeholder="Kode Pos" class="border rounded-md px-3 py-2" />
-          </div>
-          <input v-model="form.address.notes" placeholder="Catatan pengiriman (opsional)" class="w-full border rounded-md px-3 py-2 mt-2" />
-        </div>
-      </div>
+<div class="grid md:grid-cols-2 gap-4">
+  <!-- Kolom full untuk alamat utama -->
+  <div class="md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Lengkap</label>
+    <input
+      v-model="form.address.street"
+      type="text"
+      placeholder="Jalan / Gang / No."
+      class="w-full border rounded-md px-3 py-2 mb-3"
+    />
+  </div>
+
+  <!-- Kecamatan -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Kecamatan</label>
+    <input
+      v-model="form.address.district"
+      type="text"
+      placeholder="contoh: Banjarsari"
+      class="w-full border rounded-md px-3 py-2"
+    />
+  </div>
+
+  <!-- Kota/Kabupaten -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Kota / Kabupaten</label>
+    <input
+      v-model="form.address.city"
+      type="text"
+      placeholder="contoh: Surakarta"
+      class="w-full border rounded-md px-3 py-2"
+    />
+  </div>
+
+  <!-- Provinsi -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Provinsi</label>
+    <input
+      v-model="form.address.province"
+      type="text"
+      placeholder="contoh: Jawa Tengah"
+      class="w-full border rounded-md px-3 py-2"
+    />
+  </div>
+
+  <!-- Kode Pos -->
+  <div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Kode Pos</label>
+    <input
+      v-model="form.address.postal_code"
+      type="text"
+      placeholder="contoh: 57139"
+      class="w-full border rounded-md px-3 py-2"
+    />
+  </div>
+
+  <!-- Catatan Pengiriman -->
+  <div class="md:col-span-2">
+    <label class="block text-sm font-medium text-gray-700 mb-1">Catatan Pengiriman (opsional)</label>
+    <input
+      v-model="form.address.notes"
+      type="text"
+      placeholder="Contoh: rumah cat hijau dekat minimarket"
+      class="w-full border rounded-md px-3 py-2"
+    />
+  </div>
+</div>
+
 
       <div class="flex justify-end">
         <button @click="submit" :disabled="form.processing"

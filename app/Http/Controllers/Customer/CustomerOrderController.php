@@ -16,8 +16,10 @@ class CustomerOrderController extends Controller
 
         $orders = Order::query()
             ->where('user_id', $userId)
-            ->when($status, fn($q2) => $q2->where('status', $status))
-            ->when($q !== '', fn($q2) => $q2->where('code', 'like', "%{$q}%"))
+            ->when($status, function ($q2, $status) {
+    if (is_array($status)) $q2->whereIn('status', $status);
+    else $q2->where('status', $status);
+})
             ->orderByDesc('created_at')
             ->paginate(10)
             ->through(fn (Order $o) => [
