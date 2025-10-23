@@ -7,6 +7,9 @@ use App\Domain\POP\Http\Controllers\POPController;
 use App\Domain\MMT\Http\Controllers\MMTController;
 use App\Commerce\Cart\Http\Controllers\CartController;
 use App\Http\Controllers\Profile\ProfileController;
+use App\Http\Controllers\Checkout\CheckoutController;
+use App\Http\Controllers\Customer\CustomerOrderController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +30,22 @@ Route::get('/', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    
+    Route::get('/checkout/success/{code}', [CheckoutController::class, 'success'])->name('checkout.success');
+    Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{code}', [CustomerOrderController::class, 'show'])->name('orders.show');
+    Route::prefix('cart')->name('cart.')->group(function(){
+    Route::get('/', [CartController::class, 'index'])->name('index');
+    Route::post('/add', [CartController::class, 'add'])->name('add');
+    Route::post('/update/{item}', [CartController::class, 'update'])->name('update');
+    Route::post('/remove/{item}', [CartController::class, 'remove'])->name('remove');
+
+});
+});
+Route::middleware(['auth','cart.not_empty'])->group(function(){
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout.index');
+    Route::post('/checkout/submit', [CheckoutController::class, 'submit'])->name('checkout.submit');
+    
 });
 
 // Placeholder rute katalog (akan kita isi nanti)
@@ -44,12 +63,7 @@ Route::prefix('catalog/mmt')->name('mmt.')->group(function(){
 
 
 
-Route::prefix('cart')->name('cart.')->group(function(){
-    Route::get('/', [CartController::class, 'index'])->name('index');
-    Route::post('/add', [CartController::class, 'add'])->name('add');
-    Route::post('/update/{item}', [CartController::class, 'update'])->name('update');
-    Route::post('/remove/{item}', [CartController::class, 'remove'])->name('remove');
-});
+
 
 Route::middleware([
     'auth:sanctum',

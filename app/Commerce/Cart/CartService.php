@@ -66,4 +66,13 @@ class CartService
         $item->delete();
         $cart->recalcTotals();
     }
+
+    public function clear(Request $request): void
+    {
+        $cart = $this->getCurrentCart($request);
+        foreach ($cart->items as $item) {
+            $item->delete();
+        }
+        $cart->recalcTotals();
+    }
 }

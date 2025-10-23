@@ -14,6 +14,9 @@ const showSuccess = ref(false)
 const successMessage = ref('')
 const isUpdating = ref(false)
 
+const isLoggedIn = computed(() => !!page.props?.auth?.user)
+const hasItems   = computed(() => (page.props?.cart?.items?.length ?? 0) > 0)
+
 // Initialize notes and quantities from cart items
 if (items.value) {
   items.value.forEach(item => {
@@ -220,10 +223,24 @@ function specSummary(spec) {
           <span>Total</span>
           <span>Rp {{ fmt(cart?.grand_total) }}</span>
         </div>
-        <button class="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 disabled:opacity-60"
-                :disabled="items.length===0">
-          Checkout (coming soon)
-        </button>
+     <!-- Jika login: tombol Checkout -->
+     <button
+       v-if="isLoggedIn"
+       class="px-4 py-2 rounded-md bg-blue-600 text-white disabled:opacity-60"
+       :disabled="!hasItems"
+       @click="$inertia.visit(route('checkout.index'))"
+     >
+       Checkout
+     </button>
+
+     <!-- Jika belum login: ajak login dulu -->
+     <a
+       v-else
+       class="px-4 py-2 rounded-md bg-blue-600 text-white"
+       :href="route('login')"
+     >
+       Masuk untuk Checkout
+     </a>
         <p class="text-xs text-gray-500 mt-2">Checkout akan kita aktifkan setelah modul order siap.</p>
       </div>
     </div>

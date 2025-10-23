@@ -1,8 +1,9 @@
 <script setup>
 import { reactive, ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import axios from 'axios'
-import { router } from '@inertiajs/vue3'
-
+import { router, usePage } from '@inertiajs/vue3'
+const page = usePage()
+const isLoggedIn = computed(() => !!page.props?.auth?.user)
 const props = defineProps({
   product: { type: Object, required: true },      // {id,name,slug,kind, thumbnail_url, gallery:[] ...}
   // Meteran:
@@ -343,9 +344,22 @@ doQuote()
               </div>
             </div>
 
-            <button class="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700" @click="addToCart">
-              Tambah ke Keranjang
-            </button>
+ <button
+   v-if="isLoggedIn"
+   class="mt-4 w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+   @click="addToCart"
+ >
+   Tambah ke Keranjang
+ </button>
+
+
+ <a
+   v-else
+   :href="route('login')"
+   class="mt-4 w-full inline-flex items-center justify-center bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700"
+ >
+   Masuk untuk Menambahkan
+ </a>
           </div>
         </div>
 
