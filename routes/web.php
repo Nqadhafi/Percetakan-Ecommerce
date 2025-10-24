@@ -10,6 +10,7 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Customer\CustomerOrderController;
 use App\Domain\Sticker\Http\Controllers\StickerController;
+use App\Domain\BusinessPrint\Http\Controllers\BusinessPrintController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboard;
 
 
@@ -67,6 +68,12 @@ Route::prefix('catalog/sticker')->name('sticker.')->group(function(){
     Route::get('/', [StickerController::class, 'index'])->name('index');
     Route::get('/{product:slug}', [StickerController::class, 'show'])->name('show');
     Route::post('/quote', [StickerController::class, 'quote'])->name('quote');
+});
+
+Route::prefix('catalog/business-print')->name('biz.')->group(function(){
+    Route::get('/', [BusinessPrintController::class, 'index'])->name('index');
+    Route::get('/{product:slug}', [BusinessPrintController::class, 'show'])->name('show');
+    Route::post('/quote', [BusinessPrintController::class, 'quote'])->name('quote');
 });
 
 
