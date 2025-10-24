@@ -9,6 +9,7 @@ use App\Commerce\Cart\Http\Controllers\CartController;
 use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Customer\CustomerOrderController;
+use App\Domain\Sticker\Http\Controllers\StickerController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboard;
 
 
@@ -62,6 +63,11 @@ Route::prefix('catalog/mmt')->name('mmt.')->group(function(){
     Route::post('/quote', [MMTController::class, 'quote'])->name('quote');
 });
 
+Route::prefix('catalog/sticker')->name('sticker.')->group(function(){
+    Route::get('/', [StickerController::class, 'index'])->name('index');
+    Route::get('/{product:slug}', [StickerController::class, 'show'])->name('show');
+    Route::post('/quote', [StickerController::class, 'quote'])->name('quote');
+});
 
 
 
