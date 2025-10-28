@@ -10,7 +10,9 @@ use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\Checkout\CheckoutController;
 use App\Http\Controllers\Customer\CustomerOrderController;
 use App\Domain\Sticker\Http\Controllers\StickerController;
+use App\Domain\Merch\Http\Controllers\MerchController;
 use App\Domain\BusinessPrint\Http\Controllers\BusinessPrintController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboard;
 
 
@@ -75,9 +77,21 @@ Route::prefix('catalog/business-print')->name('biz.')->group(function(){
     Route::get('/{product:slug}', [BusinessPrintController::class, 'show'])->name('show');
     Route::post('/quote', [BusinessPrintController::class, 'quote'])->name('quote');
 });
+Route::prefix('catalog/merch')->name('merch.')->group(function(){
+    Route::get('/', [ MerchController::class, 'index'])->name('index');
+    Route::get('/{product:slug}', [MerchController::class, 'show'])->name('show');
+    Route::post('/quote', [MerchController::class, 'quote'])->name('quote');
+});
 
-
-
+Route::middleware(['auth', 'isStaff'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // dashboard ringkas nanti bisa ditambah /admin
+        Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{code}', [AdminOrderController::class, 'show'])->name('orders.show');
+        Route::patch('/orders/{code}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    });
 
 Route::middleware([
     'auth:sanctum',
