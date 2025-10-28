@@ -13,6 +13,8 @@ use App\Domain\Sticker\Http\Controllers\StickerController;
 use App\Domain\Merch\Http\Controllers\MerchController;
 use App\Domain\BusinessPrint\Http\Controllers\BusinessPrintController;
 use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminMerchProductController;
+use App\Http\Controllers\Admin\AdminBizProductController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboard;
 
 
@@ -83,7 +85,7 @@ Route::prefix('catalog/merch')->name('merch.')->group(function(){
     Route::post('/quote', [MerchController::class, 'quote'])->name('quote');
 });
 
-Route::middleware(['auth', 'isStaff'])
+Route::middleware(['auth', 'is_staff'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
@@ -92,6 +94,53 @@ Route::middleware(['auth', 'isStaff'])
         Route::get('/orders/{code}', [AdminOrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{code}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.updateStatus');
     });
+
+    Route::middleware(['auth','is_admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        // List semua produk merch
+        Route::get('/merch-products', [AdminMerchProductController::class, 'index'])
+            ->name('merch.index');
+        Route::get('/merch-products/create', [AdminMerchProductController::class, 'create'])
+            ->name('merch.create');
+        Route::post('/merch-products', [AdminMerchProductController::class, 'store'])
+            ->name('merch.store');
+        Route::get('/merch-products/{id}/edit', [AdminMerchProductController::class, 'edit'])
+            ->name('merch.edit');
+        Route::patch('/merch-products/{id}', [AdminMerchProductController::class, 'updateProduct'])
+            ->name('merch.updateProduct');
+        Route::post('/merch-products/{id}/variants', [AdminMerchProductController::class, 'storeVariant'])
+            ->name('merch.variant.store');
+        Route::patch('/merch-variants/{variantId}', [AdminMerchProductController::class, 'updateVariant'])
+            ->name('merch.variant.update');
+        Route::post('/merch-variants/{variantId}/tiers', [AdminMerchProductController::class, 'storeTier'])
+            ->name('merch.tier.store');
+        Route::patch('/merch-tiers/{tierId}', [AdminMerchProductController::class, 'updateTier'])
+            ->name('merch.tier.update');
+
+        
+        // Daftar produk cetak bisnis
+// Business Print
+        Route::get('/biz-products', [AdminBizProductController::class, 'index'])
+            ->name('biz.index');
+        Route::get('/biz-products/create', [AdminBizProductController::class, 'create'])
+            ->name('biz.create');
+        Route::post('/biz-products', [AdminBizProductController::class, 'store'])
+            ->name('biz.store');
+        Route::get('/biz-products/{id}/edit', [AdminBizProductController::class, 'edit'])
+            ->name('biz.edit');
+        Route::patch('/biz-products/{id}', [AdminBizProductController::class, 'updateProduct'])
+            ->name('biz.updateProduct');
+
+        // addon endpoints
+        Route::post('/biz-products/{id}/addons', [AdminBizProductController::class, 'storeAddon'])
+            ->name('biz.addon.store');
+        Route::patch('/biz-addons/{addonId}', [AdminBizProductController::class, 'updateAddon'])
+            ->name('biz.addon.update');
+        Route::patch('/biz-addons/{addonId}/disable', [AdminBizProductController::class, 'disableAddon'])
+            ->name('biz.addon.disable');
+            });
 
 Route::middleware([
     'auth:sanctum',
