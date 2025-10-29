@@ -14,6 +14,7 @@ use App\Domain\Merch\Http\Controllers\MerchController;
 use App\Domain\BusinessPrint\Http\Controllers\BusinessPrintController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminMerchProductController;
+use App\Http\Controllers\Admin\MediaUploadController;
 use App\Http\Controllers\Admin\AdminBizProductController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboard;
 
@@ -99,6 +100,9 @@ Route::middleware(['auth', 'is_staff'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+
+        Route::post('/media-upload', [MediaUploadController::class, 'store'])->name('media.upload');
+
         // List semua produk merch
         Route::get('/merch-products', [AdminMerchProductController::class, 'index'])
             ->name('merch.index');

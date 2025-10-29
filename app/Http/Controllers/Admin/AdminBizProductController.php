@@ -71,36 +71,57 @@ class AdminBizProductController extends Controller
     /**
      * Simpan produk baru
      */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'name'          => ['required','string','max:150'],
-            'slug'          => ['required','string','max:150','unique:biz_products,slug'],
-            'category'      => ['required','string','max:50'],
-            'unit_label'    => ['required','string','max:100'],
-            'base_price'    => ['required','integer','min:0'],
-            'thumbnail_url' => ['nullable','string','max:500'],
-            'images_json'   => ['nullable','array'],
-            'spec_json'     => ['nullable','array'],
-            'is_active'     => ['required','boolean'],
-        ]);
+public function store(Request $request)
+{
+    $data = $request->validate([
+        'name'          => ['required','string','max:150'],
+        'slug'          => ['required','string','max:150','unique:biz_products,slug'],
+        'category'      => ['required','string','max:50'],
+        'unit_label'    => ['required','string','max:100'],
+        'base_price'    => ['required','integer','min:0'],
+        'thumbnail_url' => ['nullable','string','max:500'],
+        'images_json'   => ['nullable','array'],
+        'spec_json'     => ['nullable','array'],
+        'is_active'     => ['required','boolean'],
 
-        $product = BizProduct::create([
-            'name'          => $data['name'],
-            'slug'          => $data['slug'],
-            'category'      => $data['category'],
-            'unit_label'    => $data['unit_label'],
-            'base_price'    => $data['base_price'],
-            'thumbnail_url' => $data['thumbnail_url'] ?? null,
-            'images_json'   => $data['images_json'] ?? [],
-            'spec_json'     => $data['spec_json'] ?? [],
-            'is_active'     => $data['is_active'],
-        ]);
+        // ini tambahan penting:
+        'preset_addons'                        => ['nullable','array'],
+        'preset_addons.*.code'                 => ['required','string','max:100'],
+        'preset_addons.*.label'                => ['required','string','max:150'],
+        'preset_addons.*.amount_per_unit'      => ['required','integer','min:0'],
+        'preset_addons.*.is_active'            => ['required','boolean'],
+    ]);
 
-        return redirect()
-            ->route('admin.biz.edit', $product->id)
-            ->with('success', 'Produk baru dibuat. Sekarang atur addon & spesifikasi.');
+    $product = BizProduct::create([
+        'name'          => $data['name'],
+        'slug'          => $data['slug'],
+        'category'      => $data['category'],
+        'unit_label'    => $data['unit_label'],
+        'base_price'    => $data['base_price'],
+        'thumbnail_url' => $data['thumbnail_url'] ?? null,
+        'images_json'   => $data['images_json'] ?? [],
+        'spec_json'     => $data['spec_json'] ?? [],
+        'is_active'     => $data['is_active'],
+    ]);
+
+    // ← BAGIAN BARU INI
+    if (!empty($data['preset_addons'])) {
+        foreach ($data['preset_addons'] as $row) {
+            BizAddonPricing::create([
+                'biz_product_id'   => $product->id,
+                'code'             => $row['code'],
+                'label'            => $row['label'],
+                'amount_per_unit'  => $row['amount_per_unit'],
+                'is_active'        => $row['is_active'],
+            ]);
+        }
     }
+
+    return redirect()
+        ->route('admin.biz.edit', $product->id)
+        ->with('success', 'Produk baru dibuat. Addon default sudah ditambahkan.');
+}
+
 
     /**
      * Halaman edit 1 produk business print

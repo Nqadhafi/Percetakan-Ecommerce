@@ -1,20 +1,31 @@
 <script setup>
-import AdminLayout from '@/Layouts/AdminLayout.vue'
 import { Link } from '@inertiajs/vue3'
+import AdminLayout from '@/Layouts/AdminLayout.vue'
 
 const props = defineProps({
   products: {
     type: Array,
     default: () => [],
+    // each:
+    // {
+    //   id,
+    //   name,
+    //   slug,
+    //   category,
+    //   unit_label,
+    //   base_price,
+    //   is_active,
+    //   addons_count
+    // }
   },
 })
 
-const badgeClass = active =>
+const badgeClass = (active) =>
   active
     ? 'bg-green-50 text-green-700 border-green-200'
     : 'bg-gray-100 text-gray-600 border-gray-200'
 
-const fmtMoney = n => new Intl.NumberFormat('id-ID').format(n ?? 0)
+const fmt = n => new Intl.NumberFormat('id-ID').format(n ?? 0)
 </script>
 
 <script>
@@ -25,11 +36,12 @@ export default {
 
 <template>
   <div class="space-y-6">
+    <!-- Header -->
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <div class="font-semibold text-lg">Produk Cetak Bisnis</div>
+        <div class="font-semibold text-lg">Business Print</div>
         <div class="text-xs text-gray-500">
-          Kartu nama, flyer, brosur lipat, dsb.
+          Kelola produk cetak bisnis (brosur, kartu nama, dsb) & biaya addonnya.
         </div>
       </div>
 
@@ -41,15 +53,17 @@ export default {
       </Link>
     </div>
 
+    <!-- Table -->
     <div class="border rounded-xl bg-white overflow-x-auto">
       <table class="w-full text-sm">
         <thead class="bg-gray-50 text-gray-600 border-b">
           <tr>
-            <th class="text-left px-4 py-2">Nama</th>
+            <th class="text-left px-4 py-2">Nama Produk</th>
             <th class="text-left px-4 py-2">Slug</th>
             <th class="text-left px-4 py-2">Kategori</th>
+            <th class="text-left px-4 py-2">Label Unit</th>
             <th class="text-left px-4 py-2">Harga Dasar</th>
-            <th class="text-left px-4 py-2">Unit</th>
+            <th class="text-left px-4 py-2">Addon</th>
             <th class="text-left px-4 py-2">Status</th>
             <th class="px-4 py-2 text-right"></th>
           </tr>
@@ -63,22 +77,31 @@ export default {
           >
             <td class="px-4 py-2 font-semibold text-gray-800">
               {{ p.name }}
+              <div class="text-[11px] text-gray-400 break-all">
+                ID: {{ p.id }}
+              </div>
             </td>
 
-            <td class="px-4 py-2 text-xs text-gray-700 break-all">
+            <td class="px-4 py-2 text-gray-700 text-xs break-all">
               {{ p.slug }}
             </td>
 
-            <td class="px-4 py-2 text-gray-700 capitalize text-xs">
-              {{ p.category.replace('_',' ') }}
-            </td>
-
             <td class="px-4 py-2 text-gray-700">
-              Rp {{ fmtMoney(p.base_price) }}
+              <div class="text-xs uppercase tracking-wide font-medium text-gray-600">
+                {{ p.category || '—' }}
+              </div>
             </td>
 
             <td class="px-4 py-2 text-gray-700 text-xs">
-              {{ p.unit_label }}
+              {{ p.unit_label || '—' }}
+            </td>
+
+            <td class="px-4 py-2 text-gray-700">
+              Rp {{ fmt(p.base_price) }}
+            </td>
+
+            <td class="px-4 py-2 text-gray-700">
+              {{ p.addons_count }} addon
             </td>
 
             <td class="px-4 py-2">
@@ -101,8 +124,8 @@ export default {
           </tr>
 
           <tr v-if="!products.length">
-            <td colspan="7" class="px-4 py-6 text-center text-gray-500 text-sm">
-              Belum ada produk bizprint.
+            <td colspan="8" class="px-4 py-6 text-center text-gray-500 text-sm">
+              Belum ada produk Business Print.
             </td>
           </tr>
         </tbody>
